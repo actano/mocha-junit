@@ -1,0 +1,26 @@
+{
+  "name": "mocha-junit",
+  "version": "0.0.1",
+  "description": "Write junit compatible results file",
+  "main": "lib/index.js",
+  "repository": "https://github.com/actano/mocha-junit",
+  "author": "Actano GmbH",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "babel src --out-dir lib",
+    "lint": "eslint src test",
+    "prepublishOnly": "rm -rf lib && babel src --out-dir lib"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "eslint": "^4.7.2",
+    "eslint-config-actano-base": "^2.1.0",
+    "eslint-plugin-import": "^2.7.0"
+  },
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "mocha": "^3.5.3"
+  }
+}
