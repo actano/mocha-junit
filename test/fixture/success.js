@@ -5,4 +5,5 @@ describe('describe success', () => {
     process.stdout.write('stdout')
     process.stderr.write('stderr')
   })
+  it('skipped')
 })
