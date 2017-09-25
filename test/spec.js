@@ -29,36 +29,46 @@ const readFile = file => new Promise((resolve, reject) => {
 })
 
 describe('contract from readme', () => {
+  let process
+  let result
+  let parsed
+
+  const getTestSuite = () => parsed.testsuite.$
+  const getTestCase = (index = 0) => parsed.testsuite.testcase[index].$
+  const getStandardOut = (index = 0) => parsed.testsuite.testcase[index]['system-out'].join('')
+  const getStandardErr = (index = 0) => parsed.testsuite.testcase[index]['system-err'].join('')
+
+  const prepare = async (...args) => {
+    await rm(PREFIX)
+
+    parsed = null
+    result = null
+    process = await execute(...args)
+    try {
+      result = await readFile(path.join(PREFIX, REPORT_FILE))
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        return
+      }
+      throw e
+    }
+    parsed = await new Promise((resolve, reject) => {
+      parseString(result, (err, _parsed) => (err ? reject(err) : resolve(_parsed)))
+    })
+  }
+
   after('remove intermediate output', async () => {
     await rm(PREFIX)
   })
 
   describe('tests succeeding', () => {
-    let process
-    let result
-    let parsed
-
-    const getTestSuite = () => parsed.testsuite.$
-    const getTestCase = (index = 0) => parsed.testsuite.testcase[index].$
-    const getStandardOut = (index = 0) => parsed.testsuite.testcase[index]['system-out'].join('')
-    const getStandardErr = (index = 0) => parsed.testsuite.testcase[index]['system-err'].join('')
-
     before('run mocha', async () => {
-      await rm(PREFIX)
-      process = await execute('test/fixture/success')
-      result = await readFile(path.join(PREFIX, REPORT_FILE))
-      parsed = await new Promise((resolve, reject) => {
-        parseString(result, (err, _parsed) => (err ? reject(err) : resolve(_parsed)))
-      })
+      await prepare('test/fixture/success')
     })
 
     it('should exit with zero', () => {
       const { code } = process
       expect(code).to.eq(0)
-    })
-
-    it('should write result file', () => {
-      expect(result).to.not.eq('')
     })
 
     it('should contain a testsuite', () => {
@@ -148,11 +158,8 @@ describe('contract from readme', () => {
   })
 
   describe('tests failing', () => {
-    let process
-
     before('run mocha', async () => {
-      await rm(PREFIX)
-      process = await execute('test/fixture/failure')
+      await prepare('test/fixture/failure')
     })
 
     it('should exit with zero', () => {
@@ -160,18 +167,15 @@ describe('contract from readme', () => {
       expect(code).to.eq(0)
     })
 
-    it('should write result file', async () => {
-      const result = await readFile(path.join(PREFIX, REPORT_FILE))
-      expect(result).to.not.eq('')
+    it('should contain number of tests failed', () => {
+      const testsuite = getTestSuite()
+      expect(testsuite.failures).to.eq(String(1))
     })
   })
 
   describe('exception in test runner', () => {
-    let process
-
     before('run mocha', async () => {
-      await rm(PREFIX)
-      process = await execute('test/fixture/missing')
+      await prepare('test/fixture/missing')
     })
 
     it('should exit with non-zero', () => {
