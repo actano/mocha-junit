@@ -21,11 +21,14 @@
     "eslint": "^4.7.2",
     "eslint-config-actano-base": "^2.1.0",
     "eslint-plugin-import": "^2.7.0",
+    "mocha": "^3.5.3",
     "rimraf": "^2.6.2",
     "xml2js": "^0.4.19"
   },
   "dependencies": {
-    "mkdirp": "^0.5.1",
-    "mocha": "^3.5.3"
+    "mkdirp": "^0.5.1"
+  },
+  "peerDependencies": {
+    "mocha": "^3"
   }
 }
