@@ -8,12 +8,12 @@ import { parseString } from 'xml2js'
 
 const MOCHA_BIN = 'node_modules/.bin/mocha'
 const SRC = 'src'
-const REPORT_FILE = 'junit.xml'
-const PREFIX = 'fixture-out'
+const TEMP_DIR = 'fixture-out'
+const REPORT_FILE = path.join(TEMP_DIR, 'junit.xml')
 
 const execute = (...args) => new Promise((resolve, reject) => {
   const process = fork(MOCHA_BIN, ['--require', SRC, ...args], {
-    env: { PREFIX, REPORT_FILE },
+    env: { REPORT_FILE },
     stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
   })
   process.on('error', reject)
@@ -39,13 +39,13 @@ describe('contract from readme', () => {
   const getStandardErr = (index = 0) => parsed.testsuite.testcase[index]['system-err'].join('')
 
   const prepare = async (...args) => {
-    await rm(PREFIX)
+    await rm(TEMP_DIR)
 
     parsed = null
     result = null
     process = await execute(...args)
     try {
-      result = await readFile(path.join(PREFIX, REPORT_FILE))
+      result = await readFile(REPORT_FILE)
     } catch (e) {
       if (e.code === 'ENOENT') {
         return
@@ -58,7 +58,7 @@ describe('contract from readme', () => {
   }
 
   after('remove intermediate output', async () => {
-    await rm(PREFIX)
+    await rm(TEMP_DIR)
   })
 
   describe('tests succeeding', () => {

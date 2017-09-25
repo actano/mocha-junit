@@ -6,7 +6,7 @@ import Mocha from 'mocha'
 import path from 'path'
 import { Test, Testsuite } from './junit-results'
 
-const { REPORT_FILE, PREFIX } = process.env
+const { REPORT_FILE } = process.env
 
 function captureStream(test, name, stream) {
   const oldWrite = stream.write
@@ -54,9 +54,8 @@ const withReleaseStreams = fn => (...args) => {
   fn(...args)
 }
 
-const install = (reportFile, prefix) => {
-  const name = path.join(path.dirname(reportFile), path.basename(reportFile, path.extname(reportFile))).replace(/\//g, '.')
-  const output = prefix ? path.join(prefix, reportFile) : reportFile
+const install = (reportFile) => {
+  const name = path.basename(reportFile, path.extname(reportFile)).replace(/\//g, '.')
   let testsuite = null
   let nonTestFailed = false
 
@@ -115,12 +114,12 @@ const install = (reportFile, prefix) => {
     }
 
     run(fn) {
-      console.log('Running mocha-junit, will write results to %s', output)
+      console.log('Running mocha-junit, will write results to %s', reportFile)
       const suite = this.suite
       super.run(() => {
         suite.eachTest(test => _test(test))
 
-        testsuite.writeFile(output, (err) => {
+        testsuite.writeFile(reportFile, (err) => {
           if (err != null) {
             throw err
           }
@@ -144,5 +143,5 @@ const install = (reportFile, prefix) => {
 }
 
 if (REPORT_FILE) {
-  install(REPORT_FILE, PREFIX || null)
+  install(REPORT_FILE)
 }
