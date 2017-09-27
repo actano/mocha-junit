@@ -33,10 +33,14 @@ describe('contract from readme', () => {
   let result
   let parsed
 
+  const _item = (array = [], index = 0) => array[index] || {}
   const getTestSuite = () => parsed.testsuite.$
-  const getTestCase = (index = 0) => parsed.testsuite.testcase[index].$
-  const getStandardOut = (index = 0) => parsed.testsuite.testcase[index]['system-out'].join('')
-  const getStandardErr = (index = 0) => parsed.testsuite.testcase[index]['system-err'].join('')
+
+  const _tc = index => _item(parsed.testsuite.testcase, index)
+  const getTestCase = index => _tc(index).$
+  const getFailure = index => _item(_tc(index).failure, 0).$
+  const getStandardOut = index => _tc(index)['system-out'].join('')
+  const getStandardErr = index => _tc(index)['system-err'].join('')
 
   const prepare = async (...args) => {
     await rm(TEMP_DIR)
@@ -181,6 +185,36 @@ describe('contract from readme', () => {
     it('should exit with non-zero', () => {
       const { code } = process
       expect(code).to.not.eq(0)
+    })
+  })
+
+  describe('exception hooks', () => {
+    let testsuite
+
+    before('run mocha', async () => {
+      await prepare('test/fixture/hooks')
+      testsuite = getTestSuite()
+    })
+
+    it('records correct number of tests', () => {
+      expect(testsuite.tests).to.eq(String(10))
+    })
+
+    it('records correct number of failures', () => {
+      expect(testsuite.failures).to.eq(String(4))
+    })
+
+    it('should fail first test for before all hook', () => {
+      expect(!!getFailure(0), 'first test fails').to.eq(true)
+    })
+    it('should fail last test for after all hook', () => {
+      expect(!!getFailure(3), 'last test fails').to.eq(true)
+    })
+    it('should fail current test for before each hook', () => {
+      expect(!!getFailure(5)).to.eq(true)
+    })
+    it('should fail current test for after each hook', () => {
+      expect(!!getFailure(8)).to.eq(true)
     })
   })
 })

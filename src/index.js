@@ -70,27 +70,39 @@ const install = (reportFile) => {
   class MyRunner extends Mocha.Runner {
     constructor(...args) {
       super(...args)
-
-      this.on('start', () => {
-        testsuite = new Testsuite(name)
-      })
-
-      this.on('end', () => {
-        testsuite.end()
-      })
+      testsuite = new Testsuite(name)
 
       this.on('test', (test) => {
         test._junitCaptureTest = _test(test)
       })
 
       this.on('fail', (failed, err) => {
+        const fail = test => _test(test).fail(failed, err)
         let test = failed
-        if (failed.type !== 'test') {
-          nonTestFailed = true
-          testsuite.failures += 1
+        if (failed.type === 'hook') {
+          if (failed.ctx.currentTest) {
+            fail(failed.ctx.currentTest)
+          } else if (String(failed.title).startsWith('"before all" hook')) {
+            let first = null
+            failed.parent.eachTest((t) => {
+              if (!first) first = t
+            })
+            fail(first)
+          } else if (String(failed.title).startsWith('"after all" hook')) {
+            let last = null
+            failed.parent.eachTest((t) => {
+              last = t
+            })
+            fail(last)
+          } else {
+            failed.parent.eachTest(fail)
+          }
+        } else if (failed.type === 'test') {
           test = (failed.ctx && failed.ctx.currentTest) || failed
+          fail(test)
+        } else {
+          nonTestFailed = true
         }
-        _test(test).fail(failed, err)
       })
 
       this.on('pass', (test) => {
@@ -116,9 +128,9 @@ const install = (reportFile) => {
     run(fn) {
       console.log('Running mocha-junit, will write results to %s', reportFile)
       const suite = this.suite
+      suite.eachTest(test => _test(test))
       super.run(() => {
-        suite.eachTest(test => _test(test))
-
+        testsuite.end()
         testsuite.writeFile(reportFile, (err) => {
           if (err != null) {
             throw err
