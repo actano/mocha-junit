@@ -4,7 +4,8 @@
 
 import Mocha from 'mocha'
 import path from 'path'
-import { Test, Testsuite } from './junit-results'
+import Testsuite from './testsuite'
+import Test from './test'
 
 const { REPORT_FILE } = process.env
 
