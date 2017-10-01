@@ -7,7 +7,6 @@ export default class Testsuite {
   constructor(name, parent) {
     this.name = name
     this.parent = parent
-    this.tests = []
     this.failures = 0
     this.errors = 0
     this.timestamp = new Date()
@@ -17,19 +16,15 @@ export default class Testsuite {
     this.parent.suites.push(this)
   }
 
-  addTest(test) {
-    this.tests.push(test)
-  }
-
   end() {
     this.time = new Date() - this.timestamp
   }
 
-  write(writable) {
+  write(writable, tests) {
     let failures = 0
     let passed = 0
-    const total = this.tests.length
-    for (const test of this.tests) {
+    const total = tests.length
+    for (const test of tests) {
       if (test.failed) {
         failures += 1
       }
@@ -59,8 +54,8 @@ export default class Testsuite {
       closeTag(writable, 'properties')
     }
 
-    for (const test of this.tests) {
-      test.write(writable)
+    for (const test of tests) {
+      test.write(writable, this)
     }
 
     closeTag(writable, 'testsuite')

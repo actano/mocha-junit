@@ -14,7 +14,7 @@ const REPORT_FILE = path.join(TEMP_DIR, 'junit.xml')
 const execute = (...args) => new Promise((resolve, reject) => {
   const process = fork(MOCHA_BIN, ['--require', SRC, ...args], {
     env: { REPORT_FILE },
-    stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+    stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
   })
   process.on('error', reject)
   process.on('close', (code, signal) => resolve({ code, signal }))

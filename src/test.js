@@ -12,14 +12,13 @@ function fullTitle(runnable) {
 }
 
 export default class Test {
-  constructor(test, suite) {
+  constructor(test) {
     this['system-out'] = []
     this['system-err'] = []
     this.test = test
     this.failures = []
     this.failed = false
     this.passed = false
-    this.suite = suite
   }
 
   fail(failed, err) {
@@ -38,10 +37,10 @@ export default class Test {
     this.passed = true
   }
 
-  write(writable) {
+  write(writable, suite) {
     const skipped = !(this.passed || this.failed)
     const attrs = {
-      classname: `${this.suite.name}.${fullTitle(this.test.parent)}`,
+      classname: `${suite.name}.${fullTitle(this.test.parent)}`,
       name: this.test.title,
     }
     if (!skipped) {

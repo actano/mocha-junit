@@ -20,20 +20,6 @@ function copyStreams(test) {
   test['system-err'].push(consumeStream('stderr'))
 }
 
-const writeFile = (output, xmlWriter, cb) => {
-  // Create directory if it doesn't exist
-  mkdirp(path.dirname(output), (err) => {
-    if (err) {
-      cb(err)
-      return
-    }
-    const writable = fs.createWriteStream(output)
-    xmlDecl(writable)
-    xmlWriter.write(writable)
-    writable.end(cb)
-  })
-}
-
 function patchRunner(Runner) {
   const oldRun = Runner.prototype.run
 
@@ -42,11 +28,12 @@ function patchRunner(Runner) {
       ? path.basename(REPORT_FILE, path.extname(REPORT_FILE)).replace(/\//g, '.')
       : 'junit report'
     const testsuite = new Testsuite(name)
+    const tests = []
 
     function _test(test) {
       if (test._junitTest == null) {
-        test._junitTest = new Test(test, testsuite)
-        testsuite.addTest(test._junitTest)
+        test._junitTest = new Test(test)
+        tests.push(test._junitTest)
       }
       return test._junitTest
     }
@@ -82,11 +69,24 @@ function patchRunner(Runner) {
     oldRun.call(this, (result) => {
       testsuite.end()
       if (REPORT_FILE) {
-        writeFile(REPORT_FILE, testsuite, (err) => {
-          if (err != null) {
-            throw err
+        // Create directory if it doesn't exist
+        mkdirp(path.dirname(REPORT_FILE), (err) => {
+          if (err) {
+            console.error(err)
+            fn(result)
+            return
           }
-          fn(0)
+          const writable = fs.createWriteStream(REPORT_FILE)
+          xmlDecl(writable)
+          testsuite.write(writable, tests)
+          writable.end((_err) => {
+            if (_err) {
+              console.error(_err)
+              fn(result)
+              return
+            }
+            fn(0)
+          })
         })
       } else {
         fn(result)
