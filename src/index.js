@@ -8,7 +8,7 @@ import Mocha from 'mocha'
 import path from 'path'
 import patchRunnable from './mocha/stream-patch-runnable'
 import Test from './test'
-import Testsuite from './testsuite'
+import Testsuite, { writeTestsuite } from './testsuite'
 import { xmlDecl } from './xml-writer'
 
 const { REPORT_FILE } = process.env
@@ -27,7 +27,7 @@ function patchRunner(Runner) {
     const name = REPORT_FILE
       ? path.basename(REPORT_FILE, path.extname(REPORT_FILE)).replace(/\//g, '.')
       : 'junit report'
-    const testsuite = new Testsuite(name)
+    const startDate = new Date()
     const tests = []
 
     function _test(test) {
@@ -67,7 +67,6 @@ function patchRunner(Runner) {
     })
 
     oldRun.call(this, (result) => {
-      testsuite.end()
       if (REPORT_FILE) {
         // Create directory if it doesn't exist
         mkdirp(path.dirname(REPORT_FILE), (err) => {
@@ -78,7 +77,7 @@ function patchRunner(Runner) {
           }
           const writable = fs.createWriteStream(REPORT_FILE)
           xmlDecl(writable)
-          testsuite.write(writable, tests)
+          writeTestsuite(writable, name, startDate, tests)
           writable.end((_err) => {
             if (_err) {
               console.error(_err)

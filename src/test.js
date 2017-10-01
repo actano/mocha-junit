@@ -37,10 +37,10 @@ export default class Test {
     this.passed = true
   }
 
-  write(writable, suite) {
+  write(writable, suiteName) {
     const skipped = !(this.passed || this.failed)
     const attrs = {
-      classname: `${suite.name}.${fullTitle(this.test.parent)}`,
+      classname: `${suiteName}.${fullTitle(this.test.parent)}`,
       name: this.test.title,
     }
     if (!skipped) {
