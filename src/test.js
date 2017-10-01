@@ -1,15 +1,6 @@
 import { writeSystemErr, writeSystemOut } from './has-streams'
+import fullTitle from './mocha/full-title'
 import { closeTag, emptyTag, openTag, text } from './xml-writer'
-
-function fullTitle(runnable) {
-  const result = []
-  let r = runnable
-  while (r != null) {
-    if (r.title !== '') { result.push(r.title) }
-    r = r.parent
-  }
-  return result.reverse().join('.')
-}
 
 export default class Test {
   constructor(test) {
@@ -17,19 +8,6 @@ export default class Test {
     this['system-err'] = []
     this.test = test
     this.failures = []
-  }
-
-  fail(failed, err) {
-    let message = err && err.message ? err.message : 'unknown error'
-    if (failed !== this.test) { message += ` (from: ${fullTitle(failed)})` }
-    let content = ''
-    if (err && err.stack) {
-      content = err.stack.replace(/^/gm, '  ')
-    }
-    this.failures.push({ message, content })
-  }
-
-  pass() {
   }
 
   isFailed() {

@@ -6,12 +6,21 @@ import fs from 'fs'
 import mkdirp from 'mkdirp'
 import Mocha from 'mocha'
 import path from 'path'
+import fullTitle from './mocha/full-title'
 import patchRunnable from './mocha/stream-patch-runnable'
 import Test from './test'
-import Testsuite, { writeTestsuite } from './testsuite'
+import { writeTestsuite } from './testsuite'
 import { xmlDecl } from './xml-writer'
 
 const { REPORT_FILE } = process.env
+
+export function errorStack(err) {
+  return err && err.stack ? err.stack.replace(/^/gm, '  ') : ''
+}
+
+export function errorMessage(err) {
+  return err && err.message ? err.message : 'unknown error'
+}
 
 const consumeStream = patchRunnable(Mocha.Test, Mocha.Hook)
 
@@ -38,13 +47,18 @@ function patchRunner(Runner) {
       return test._junitTest
     }
 
-    this.on('pass', (test) => {
-      _test(test).pass()
+    this.on('test', (test) => {
+      _test(test)
     })
 
     this.on('fail', (failed, err) => {
+      const message = failed.ctx.currentTest
+        ? `${errorMessage(err)} (from: ${fullTitle(failed)})`
+        : errorMessage(err)
+      const content = errorStack(err)
+
       const failing = _test(failed.ctx.currentTest || failed)
-      failing.fail(failed, err)
+      failing.failures.push({ message, content })
       copyStreams(failing, failed)
     })
 
@@ -95,3 +109,4 @@ function patchRunner(Runner) {
 }
 
 patchRunner(Mocha.Runner)
+
