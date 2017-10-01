@@ -1,4 +1,4 @@
-import { closeTag, openTag, text } from './xml-writer'
+import { closeTag, openTag, text } from './write-xml'
 
 const writeStream = (writable, s, value) => {
   if (value != null && value.length) {

@@ -9,7 +9,7 @@ function releaseStream(stream) {
   stream.write = stream.write._old
 }
 
-export function captureStream(stream, buf = []) {
+export default function captureStream(stream, buf = []) {
   const oldWrite = stream.write
   stream.write = function streamWrite(chunk, encoding, cb) {
     // param encoding could be ommitted
@@ -34,20 +34,5 @@ export function captureStream(stream, buf = []) {
     releaseStream(stream)
     return buf.join('')
   }
-}
-
-export function captureStreams(test) {
-  captureStream(process.stdout, test['system-out'])
-  captureStream(process.stderr, test['system-err'])
-}
-
-export function releaseStreams() {
-  releaseStream(process.stdout)
-  releaseStream(process.stderr)
-}
-
-export const withReleaseStreams = fn => (...args) => {
-  releaseStreams()
-  fn(...args)
 }
 

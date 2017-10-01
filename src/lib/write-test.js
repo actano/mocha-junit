@@ -1,11 +1,10 @@
-import { writeSystemErr, writeSystemOut } from './has-streams'
-import fullTitle from './mocha/full-title'
-import { closeTag, emptyTag, openTag, text } from './xml-writer'
+import { writeSystemErr, writeSystemOut } from './write-streams'
+import { closeTag, emptyTag, openTag, text } from './write-xml'
 
-export function writeTest(writable, test, failures, suiteName, stdout, stderr) {
+export default function writeTest(writable, classname, test, failures, stdout, stderr) {
   const skipped = !failures.length && test.isPending()
   const attrs = {
-    classname: `${suiteName}.${fullTitle(test.parent)}`,
+    classname,
     name: test.title,
   }
   if (!skipped) {
