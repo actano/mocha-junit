@@ -4,6 +4,7 @@
 
 import Mocha from 'mocha'
 import path from 'path'
+import { writeFile } from './xml-writer'
 import Testsuite from './testsuite'
 import Test from './test'
 import patchRunnable from './mocha/stream-patch-runnable'
@@ -65,7 +66,7 @@ function patchRunner(Runner) {
     oldRun.call(this, (result) => {
       testsuite.end()
       if (REPORT_FILE) {
-        testsuite.writeFile(REPORT_FILE, (err) => {
+        writeFile(REPORT_FILE, testsuite, (err) => {
           if (err != null) {
             throw err
           }

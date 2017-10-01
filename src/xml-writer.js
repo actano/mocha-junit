@@ -24,45 +24,50 @@ function buildEscapes() {
 
 const _xmlEscape = buildEscapes()
 
-export default class XMLWriter {
-  _startTag(writable, name, attrs = {}) {
-    writable.write(`<${name}`)
-    for (const k of Object.keys(attrs)) {
-      const v = attrs[k]
-      if (v != null) {
-        writable.write(` ${k}="`)
-        this.escape(writable, v)
-        writable.write('"')
-      }
+export const xmlDecl = (stream) => {
+  stream.write('<?xml version="1.1"?>\n')
+}
+
+export const text = (stream, s) => {
+  stream.write(_xmlEscape(s))
+}
+
+const _startTag = (stream, name, attrs = {}) => {
+  stream.write(`<${name}`)
+  for (const k of Object.keys(attrs)) {
+    const v = attrs[k]
+    if (v != null) {
+      stream.write(` ${k}="`)
+      text(stream, v)
+      stream.write('"')
     }
-
-    return writable
   }
+}
 
-  openTag(writable, name, attrs) {
-    return this._startTag(writable, name, attrs).write('>\n')
-  }
+export const openTag = (stream, name, attrs) => {
+  _startTag(stream, name, attrs)
+  stream.write('>\n')
+}
 
-  emptyTag(writable, name, attrs) {
-    return this._startTag(writable, name, attrs).write('/>\n')
-  }
+export const emptyTag = (stream, name, attrs) => {
+  _startTag(stream, name, attrs)
+  stream.write('/>\n')
+}
 
-  closeTag(writable, name) {
-    return writable.write(`</${name}>\n`)
-  }
+export const closeTag = (stream, name) => {
+  stream.write(`</${name}>\n`)
+}
 
-  escape(writable, s) {
-    return writable.write(_xmlEscape(s))
-  }
-
-  writeFile(output, cb) {
-    // Create directory if it doesn't exist
-    return mkdirp(path.dirname(output), (err) => {
-      if (err != null) { return cb(err) }
-      const writable = fs.createWriteStream(output)
-      writable.write('<?xml version="1.1"?>\n')
-      this.write(writable)
-      return writable.end(cb)
-    })
-  }
+export const writeFile = (output, xmlWriter, cb) => {
+  // Create directory if it doesn't exist
+  mkdirp(path.dirname(output), (err) => {
+    if (err) {
+      cb(err)
+      return
+    }
+    const writable = fs.createWriteStream(output)
+    xmlDecl(writable)
+    xmlWriter.write(writable)
+    writable.end(cb)
+  })
 }

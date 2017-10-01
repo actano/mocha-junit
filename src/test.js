@@ -1,4 +1,5 @@
 import HasStreams from './has-streams'
+import { closeTag, emptyTag, openTag, text } from './xml-writer'
 
 function fullTitle(runnable) {
   const result = []
@@ -45,16 +46,16 @@ export default class Test extends HasStreams {
     if (!skipped) {
       attrs.time = this.test.duration / 1000
     }
-    this.openTag(writable, 'testcase', attrs)
+    openTag(writable, 'testcase', attrs)
     for (const failure of this.failures) {
-      this.openTag(writable, 'failure', { message: failure.message })
-      this.escape(writable, failure.content)
-      this.closeTag(writable, 'failure')
+      openTag(writable, 'failure', { message: failure.message })
+      text(writable, failure.content)
+      closeTag(writable, 'failure')
     }
     if (skipped) {
-      this.emptyTag(writable, 'skipped')
+      emptyTag(writable, 'skipped')
     }
     super.write(writable)
-    return this.closeTag(writable, 'testcase')
+    closeTag(writable, 'testcase')
   }
 }

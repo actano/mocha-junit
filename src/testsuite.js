@@ -2,6 +2,7 @@ import os from 'os'
 
 import HasStreams from './has-streams'
 import Testsuites from './testsuites'
+import { closeTag, emptyTag, openTag } from './xml-writer'
 
 export default class Testsuite extends HasStreams {
   constructor(name, parent) {
@@ -39,7 +40,7 @@ export default class Testsuite extends HasStreams {
       }
     }
 
-    this.openTag(writable, 'testsuite', {
+    openTag(writable, 'testsuite', {
       name: this.name,
       hostname: this.hostname,
       timestamp: this.timestamp.toUTCString(),
@@ -52,12 +53,12 @@ export default class Testsuite extends HasStreams {
 
     const keys = Object.keys(this.properties)
     if (keys.length) {
-      this.openTag(writable, 'properties')
+      openTag(writable, 'properties')
       for (const name of keys) {
         const value = this.properties[name]
-        this.emptyTag(writable, 'property', { name, value })
+        emptyTag(writable, 'property', { name, value })
       }
-      this.closeTag(writable, 'properties')
+      closeTag(writable, 'properties')
     }
 
     for (const test of this.tests) {
@@ -65,6 +66,6 @@ export default class Testsuite extends HasStreams {
     }
 
     super.write(writable)
-    this.closeTag(writable, 'testsuite')
+    closeTag(writable, 'testsuite')
   }
 }

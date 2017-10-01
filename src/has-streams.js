@@ -1,10 +1,9 @@
-import XMLWriter from './xml-writer'
+import { closeTag, openTag, text } from './xml-writer'
 
 const STREAMS = ['system-out', 'system-err']
 
-export default class HasStreams extends XMLWriter {
+export default class HasStreams {
   constructor() {
-    super()
     for (const s of STREAMS) {
       this[s] = []
     }
@@ -12,11 +11,11 @@ export default class HasStreams extends XMLWriter {
 
   write(writable) {
     for (const s of STREAMS) {
-      const text = this[s].join('').trim()
-      if (text.length) {
-        this.openTag(writable, s)
-        this.escape(writable, text)
-        this.closeTag(writable, s)
+      const value = this[s].join('').trim()
+      if (value.length) {
+        openTag(writable, s)
+        text(writable, value)
+        closeTag(writable, s)
       }
     }
   }

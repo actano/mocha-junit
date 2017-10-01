@@ -1,17 +1,16 @@
-import XMLWriter from './xml-writer'
+import { closeTag, openTag } from './xml-writer'
 
-export default class Testsuites extends XMLWriter {
+export default class Testsuites {
   constructor(name) {
-    super()
     this.name = name
     this.suites = []
   }
 
   write(writable) {
-    this.openTag(writable, 'testsuites', { name: this.name })
+    openTag(writable, 'testsuites', { name: this.name })
     for (const testsuite of this.suites) {
       testsuite.write(writable)
     }
-    return this.closeTag(writable, 'testsuites')
+    closeTag(writable, 'testsuites')
   }
 }
