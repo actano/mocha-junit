@@ -1,7 +1,4 @@
 /* eslint-disable class-methods-use-this */
-import fs from 'fs'
-import mkdirp from 'mkdirp'
-import path from 'path'
 
 function buildEscapes() {
   const escapes = {
@@ -56,18 +53,4 @@ export const emptyTag = (stream, name, attrs) => {
 
 export const closeTag = (stream, name) => {
   stream.write(`</${name}>\n`)
-}
-
-export const writeFile = (output, xmlWriter, cb) => {
-  // Create directory if it doesn't exist
-  mkdirp(path.dirname(output), (err) => {
-    if (err) {
-      cb(err)
-      return
-    }
-    const writable = fs.createWriteStream(output)
-    xmlDecl(writable)
-    xmlWriter.write(writable)
-    writable.end(cb)
-  })
 }

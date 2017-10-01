@@ -2,12 +2,14 @@
  no-param-reassign,
  */
 
+import fs from 'fs'
+import mkdirp from 'mkdirp'
 import Mocha from 'mocha'
 import path from 'path'
-import { writeFile } from './xml-writer'
-import Testsuite from './testsuite'
-import Test from './test'
 import patchRunnable from './mocha/stream-patch-runnable'
+import Test from './test'
+import Testsuite from './testsuite'
+import { xmlDecl } from './xml-writer'
 
 const { REPORT_FILE } = process.env
 
@@ -16,6 +18,20 @@ const consumeStream = patchRunnable(Mocha.Test, Mocha.Hook)
 function copyStreams(test) {
   test['system-out'].push(consumeStream('stdout'))
   test['system-err'].push(consumeStream('stderr'))
+}
+
+const writeFile = (output, xmlWriter, cb) => {
+  // Create directory if it doesn't exist
+  mkdirp(path.dirname(output), (err) => {
+    if (err) {
+      cb(err)
+      return
+    }
+    const writable = fs.createWriteStream(output)
+    xmlDecl(writable)
+    xmlWriter.write(writable)
+    writable.end(cb)
+  })
 }
 
 function patchRunner(Runner) {
