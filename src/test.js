@@ -17,28 +17,35 @@ export default class Test {
     this['system-err'] = []
     this.test = test
     this.failures = []
-    this.failed = false
-    this.passed = false
   }
 
   fail(failed, err) {
-    this.failed = true
-    this.passed = false
     let message = err && err.message ? err.message : 'unknown error'
     if (failed !== this.test) { message += ` (from: ${fullTitle(failed)})` }
     let content = ''
     if (err && err.stack) {
       content = err.stack.replace(/^/gm, '  ')
     }
-    return this.failures.push({ message, content })
+    this.failures.push({ message, content })
   }
 
   pass() {
-    this.passed = true
+  }
+
+  isFailed() {
+    return !!this.failures.length
+  }
+
+  isPassed() {
+    return !this.isFailed() && !this.test.isPending()
+  }
+
+  isSkipped() {
+    return !this.isFailed() && !this.isPassed()
   }
 
   write(writable, suiteName) {
-    const skipped = !(this.passed || this.failed)
+    const skipped = this.isSkipped()
     const attrs = {
       classname: `${suiteName}.${fullTitle(this.test.parent)}`,
       name: this.test.title,

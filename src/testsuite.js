@@ -17,8 +17,8 @@ export function writeProperties(writable, properties) {
 export function writeTestsuite(writable, name, startDate, tests, properties = {}) {
   const time = new Date() - startDate
   const total = tests.length
-  const failures = tests.filter(test => test.failed).length
-  const passed = tests.filter(test => test.passed).length
+  const failures = tests.filter(test => test.isFailed()).length
+  const passed = tests.filter(test => test.isPassed()).length
 
   openTag(writable, 'testsuite', {
     name,
