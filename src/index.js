@@ -6,110 +6,76 @@ import Mocha from 'mocha'
 import path from 'path'
 import Testsuite from './testsuite'
 import Test from './test'
-import { captureStreams, releaseStreams, withReleaseStreams } from './streams'
+import patchRunnable from './mocha/stream-patch-runnable'
 
 const { REPORT_FILE } = process.env
 
-const install = (reportFile) => {
-  const name = path.basename(reportFile, path.extname(reportFile)).replace(/\//g, '.')
-  let testsuite = null
-  let nonTestFailed = false
+const consumeStream = patchRunnable(Mocha.Test, Mocha.Hook)
 
-  function _test(test) {
-    if (test._junitTest == null) {
-      test._junitTest = new Test(test, testsuite)
-      testsuite.addTest(test._junitTest)
-    }
-    return test._junitTest
-  }
+function copyStreams(test) {
+  test['system-out'].push(consumeStream('stdout'))
+  test['system-err'].push(consumeStream('stderr'))
+}
 
-  class MyRunner extends Mocha.Runner {
-    constructor(...args) {
-      super(...args)
-      testsuite = new Testsuite(name)
+function patchRunner(Runner) {
+  const oldRun = Runner.prototype.run
 
-      this.on('test', (test) => {
-        test._junitCaptureTest = _test(test)
-      })
+  Runner.prototype.run = function runWithJunit(fn) {
+    const name = REPORT_FILE
+      ? path.basename(REPORT_FILE, path.extname(REPORT_FILE)).replace(/\//g, '.')
+      : 'junit report'
+    const testsuite = new Testsuite(name)
 
-      this.on('fail', (failed, err) => {
-        const fail = test => _test(test).fail(failed, err)
-        let test = failed
-        if (failed.type === 'hook') {
-          if (failed.ctx.currentTest) {
-            fail(failed.ctx.currentTest)
-          } else if (String(failed.title).startsWith('"before all" hook')) {
-            let first = null
-            failed.parent.eachTest((t) => {
-              if (!first) first = t
-            })
-            fail(first)
-          } else if (String(failed.title).startsWith('"after all" hook')) {
-            let last = null
-            failed.parent.eachTest((t) => {
-              last = t
-            })
-            fail(last)
-          } else {
-            failed.parent.eachTest(fail)
-          }
-        } else if (failed.type === 'test') {
-          test = (failed.ctx && failed.ctx.currentTest) || failed
-          fail(test)
-        } else {
-          nonTestFailed = true
-        }
-      })
-
-      this.on('pass', (test) => {
-        _test(test).pass()
-      })
-
-      this.on('hook', (hook) => {
-        if (hook.ctx.currentTest != null) {
-          const test = _test(hook.ctx.currentTest)
-          hook._streamsCaptured = true
-          captureStreams(test)
-        }
-      })
-
-      this.on('hook end', (hook) => {
-        if (hook._streamsCaptured) {
-          delete hook._streamsCaptured
-          releaseStreams()
-        }
-      })
+    function _test(test) {
+      if (test._junitTest == null) {
+        test._junitTest = new Test(test, testsuite)
+        testsuite.addTest(test._junitTest)
+      }
+      return test._junitTest
     }
 
-    run(fn) {
-      console.log('Running mocha-junit, will write results to %s', reportFile)
-      const suite = this.suite
-      suite.eachTest(test => _test(test))
-      super.run(() => {
-        testsuite.end()
-        testsuite.writeFile(reportFile, (err) => {
+    this.on('pass', (test) => {
+      _test(test).pass()
+    })
+
+    this.on('fail', (failed, err) => {
+      const failing = _test(failed.ctx.currentTest || failed)
+      failing.fail(failed, err)
+      copyStreams(failing, failed)
+    })
+
+    this.on('test end', (test) => {
+      copyStreams(_test(test), test)
+    })
+
+    this.on('hook end', (hook) => {
+      // if hook is dedicated to a test copy stream output there
+      if (hook.ctx.currentTest != null) {
+        const test = _test(hook.ctx.currentTest)
+        copyStreams(test, hook)
+      }
+    })
+
+    this.on('suite end', (suite) => {
+      // ensure all tests of suite are recorded
+      // (if they are not executed by mocha, they aren't traced otherwise)
+      suite.eachTest(_test)
+    })
+
+    oldRun.call(this, (result) => {
+      testsuite.end()
+      if (REPORT_FILE) {
+        testsuite.writeFile(REPORT_FILE, (err) => {
           if (err != null) {
             throw err
           }
-          return fn(nonTestFailed ? 1 : 0)
+          fn(0)
         })
-      })
-    }
-
-    runTest(fn) {
-      const test = this.test._junitCaptureTest
-      if (test != null) {
-        delete this.test._junitCaptureTest
-        fn = withReleaseStreams(fn)
-        captureStreams(test)
+      } else {
+        fn(result)
       }
-      super.runTest(fn)
-    }
+    })
   }
-
-  Mocha.Runner = MyRunner
 }
 
-if (REPORT_FILE) {
-  install(REPORT_FILE)
-}
+patchRunner(Mocha.Runner)

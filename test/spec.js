@@ -196,25 +196,25 @@ describe('contract from readme', () => {
       testsuite = getTestSuite()
     })
 
-    it('records correct number of tests', () => {
-      expect(testsuite.tests).to.eq(String(10))
+    it('records correct number of tests (# of tests + failing hooks)', () => {
+      expect(testsuite.tests).to.eq(String(12))
     })
 
     it('records correct number of failures', () => {
       expect(testsuite.failures).to.eq(String(4))
     })
 
-    it('should fail first test for before all hook', () => {
-      expect(!!getFailure(0), 'first test fails').to.eq(true)
+    it('should record hook as failing test for failing before all hook', () => {
+      expect(!!getFailure(0), 'before all hook fails').to.eq(true)
     })
-    it('should fail last test for after all hook', () => {
-      expect(!!getFailure(3), 'last test fails').to.eq(true)
+    it('should record hook as failing test for failing after all hook', () => {
+      expect(!!getFailure(5), 'after all hook fails').to.eq(true)
     })
     it('should fail current test for before each hook', () => {
-      expect(!!getFailure(5)).to.eq(true)
+      expect(!!getFailure(7)).to.eq(true)
     })
     it('should fail current test for after each hook', () => {
-      expect(!!getFailure(8)).to.eq(true)
+      expect(!!getFailure(10)).to.eq(true)
     })
   })
 })

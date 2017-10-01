@@ -2,9 +2,15 @@
  no-param-reassign,
  */
 
-function captureStream(test, name, stream) {
+function releaseStream(stream) {
+  if (stream.write._old == null) {
+    return
+  }
+  stream.write = stream.write._old
+}
+
+export function captureStream(stream, buf = []) {
   const oldWrite = stream.write
-  const buf = test[name]
   stream.write = function streamWrite(chunk, encoding, cb) {
     // param encoding could be ommitted
     if (typeof encoding === 'function') {
@@ -24,18 +30,15 @@ function captureStream(test, name, stream) {
   }
 
   stream.write._old = oldWrite
-}
-
-function releaseStream(stream) {
-  if (stream.write._old == null) {
-    return
+  return () => {
+    releaseStream(stream)
+    return buf.join('')
   }
-  stream.write = stream.write._old
 }
 
 export function captureStreams(test) {
-  captureStream(test, 'system-out', process.stdout)
-  captureStream(test, 'system-err', process.stderr)
+  captureStream(process.stdout, test['system-out'])
+  captureStream(process.stderr, test['system-err'])
 }
 
 export function releaseStreams() {
