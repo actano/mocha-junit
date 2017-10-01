@@ -1,12 +1,10 @@
 import os from 'os'
 
-import HasStreams from './has-streams'
 import Testsuites from './testsuites'
 import { closeTag, emptyTag, openTag } from './xml-writer'
 
-export default class Testsuite extends HasStreams {
+export default class Testsuite {
   constructor(name, parent) {
-    super()
     this.name = name
     this.parent = parent
     this.tests = []
@@ -65,7 +63,6 @@ export default class Testsuite extends HasStreams {
       test.write(writable)
     }
 
-    super.write(writable)
     closeTag(writable, 'testsuite')
   }
 }

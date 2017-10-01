@@ -1,4 +1,4 @@
-import HasStreams from './has-streams'
+import { writeSystemErr, writeSystemOut } from './has-streams'
 import { closeTag, emptyTag, openTag, text } from './xml-writer'
 
 function fullTitle(runnable) {
@@ -11,9 +11,10 @@ function fullTitle(runnable) {
   return result.reverse().join('.')
 }
 
-export default class Test extends HasStreams {
+export default class Test {
   constructor(test, suite) {
-    super()
+    this['system-out'] = []
+    this['system-err'] = []
     this.test = test
     this.failures = []
     this.failed = false
@@ -55,7 +56,8 @@ export default class Test extends HasStreams {
     if (skipped) {
       emptyTag(writable, 'skipped')
     }
-    super.write(writable)
+    writeSystemOut(writable, this['system-out'].join('').trim())
+    writeSystemErr(writable, this['system-err'].join('').trim())
     closeTag(writable, 'testcase')
   }
 }

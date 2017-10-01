@@ -1,23 +1,17 @@
 import { closeTag, openTag, text } from './xml-writer'
 
-const STREAMS = ['system-out', 'system-err']
-
-export default class HasStreams {
-  constructor() {
-    for (const s of STREAMS) {
-      this[s] = []
-    }
-  }
-
-  write(writable) {
-    for (const s of STREAMS) {
-      const value = this[s].join('').trim()
-      if (value.length) {
-        openTag(writable, s)
-        text(writable, value)
-        closeTag(writable, s)
-      }
-    }
+const writeStream = (writable, s, value) => {
+  if (value.length) {
+    openTag(writable, s)
+    text(writable, value)
+    closeTag(writable, s)
   }
 }
 
+export const writeSystemOut = (writable, value) => {
+  writeStream(writable, 'system-out', value)
+}
+
+export const writeSystemErr = (writable, value) => {
+  writeStream(writable, 'system-err', value)
+}
