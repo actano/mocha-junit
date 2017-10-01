@@ -6,9 +6,8 @@ import fs from 'fs'
 import mkdirp from 'mkdirp'
 import Mocha from 'mocha'
 import path from 'path'
-import fullTitle from './mocha/full-title'
 import patchRunnable from './mocha/stream-patch-runnable'
-import Test from './test'
+import { writeTest } from './test'
 import { writeTestsuite } from './testsuite'
 import { xmlDecl } from './xml-writer'
 
@@ -25,8 +24,8 @@ export function errorMessage(err) {
 const consumeStream = patchRunnable(Mocha.Test, Mocha.Hook)
 
 function copyStreams(test) {
-  test['system-out'].push(consumeStream('stdout'))
-  test['system-err'].push(consumeStream('stderr'))
+  test.stdout = consumeStream('stdout')
+  test.stderr = consumeStream('stderr')
 }
 
 function patchRunner(Runner) {
@@ -40,38 +39,32 @@ function patchRunner(Runner) {
     const tests = []
 
     function _test(test) {
-      if (test._junitTest == null) {
-        test._junitTest = new Test(test)
-        tests.push(test._junitTest)
+      if (!tests.includes(test)) {
+        tests.push(test)
+        if (!test.failures) test.failures = []
       }
-      return test._junitTest
+      return test
     }
 
     this.on('test', (test) => {
-      _test(test)
+      // _test(test)
     })
 
     this.on('fail', (failed, err) => {
-      const message = failed.ctx.currentTest
-        ? `${errorMessage(err)} (from: ${fullTitle(failed)})`
-        : errorMessage(err)
+      const message = errorMessage(err)
       const content = errorStack(err)
 
-      const failing = _test(failed.ctx.currentTest || failed)
+      const failing = _test(failed)
       failing.failures.push({ message, content })
-      copyStreams(failing, failed)
     })
 
     this.on('test end', (test) => {
-      copyStreams(_test(test), test)
+      copyStreams(test)
+      _test(test)
     })
 
     this.on('hook end', (hook) => {
-      // if hook is dedicated to a test copy stream output there
-      if (hook.ctx.currentTest != null) {
-        const test = _test(hook.ctx.currentTest)
-        copyStreams(test, hook)
-      }
+      copyStreams(hook)
     })
 
     this.on('suite end', (suite) => {
@@ -89,9 +82,16 @@ function patchRunner(Runner) {
             fn(result)
             return
           }
+          const failures = tests.filter(test => test.failures.length).length
+          const skipped = tests.filter(test => !test.failures.length && test.isPending()).length
+
           const writable = fs.createWriteStream(REPORT_FILE)
           xmlDecl(writable)
-          writeTestsuite(writable, name, startDate, tests)
+          writeTestsuite(writable, name, startDate, tests.length, failures, skipped, () => {
+            for (const test of tests) {
+              writeTest(writable, test, test.failures, name, test.stdout, test.stderr)
+            }
+          })
           writable.end((_err) => {
             if (_err) {
               console.error(_err)

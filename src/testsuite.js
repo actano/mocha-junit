@@ -14,25 +14,17 @@ export function writeProperties(writable, properties) {
   }
 }
 
-export function writeTestsuite(writable, name, startDate, tests, properties = {}) {
-  const time = new Date() - startDate
-  const total = tests.length
-  const failures = tests.filter(test => test.isFailed()).length
-  const passed = tests.filter(test => test.isPassed()).length
-
+export function writeTestsuite(writable, name, startDate, tests, failures, skipped, fn) {
   openTag(writable, 'testsuite', {
     name,
     hostname: os.hostname(),
     timestamp: startDate.toUTCString(),
-    time: time / 1000,
-    tests: total,
+    time: (new Date() - startDate) / 1000,
+    tests,
     failures,
-    skipped: total - failures - passed,
+    skipped,
     errors: 0,
   })
-  writeProperties(writable, properties)
-  for (const test of tests) {
-    test.write(writable, name)
-  }
+  fn()
   closeTag(writable, 'testsuite')
 }

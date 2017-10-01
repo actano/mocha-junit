@@ -1,7 +1,7 @@
 import { closeTag, openTag, text } from './xml-writer'
 
 const writeStream = (writable, s, value) => {
-  if (value.length) {
+  if (value != null && value.length) {
     openTag(writable, s)
     text(writable, value)
     closeTag(writable, s)

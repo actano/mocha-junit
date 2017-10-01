@@ -197,7 +197,7 @@ describe('contract from readme', () => {
     })
 
     it('records correct number of tests (# of tests + failing hooks)', () => {
-      expect(testsuite.tests).to.eq(String(12))
+      expect(testsuite.tests).to.eq(String(14))
     })
 
     it('records correct number of failures', () => {
@@ -210,11 +210,11 @@ describe('contract from readme', () => {
     it('should record hook as failing test for failing after all hook', () => {
       expect(!!getFailure(5), 'after all hook fails').to.eq(true)
     })
-    it('should fail current test for before each hook', () => {
-      expect(!!getFailure(7)).to.eq(true)
+    it('should record hook as failing test for failing before each hook', () => {
+      expect(!!getFailure(7), 'before each hook fails').to.eq(true)
     })
-    it('should fail current test for after each hook', () => {
-      expect(!!getFailure(10)).to.eq(true)
+    it('should record hook as failing test for failing after each hook', () => {
+      expect(!!getFailure(12), 'after each hook fails').to.eq(true)
     })
   })
 })
