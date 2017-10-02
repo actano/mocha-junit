@@ -27,34 +27,37 @@ export default function captureStreams(runner) {
     flushStream('stderr')
   }
 
-  runner.on('start', () => {
+  runner.addListener('start', () => {
     release = [
       captureStream(process.stdout, buffer.stdout),
       captureStream(process.stderr, buffer.stderr),
     ]
   })
 
-  runner.on('end', () => {
+  runner.addListener('end', () => {
     release.forEach((releaseFn) => { releaseFn() })
   })
 
-  runner.on('test', (_test) => {
+  runner.addListener('test', (_test) => {
     flushStreams()
     test = _test
   })
 
-  runner.on('hook', (_hook) => {
+  runner.addListener('hook', (_hook) => {
     flushStreams()
     hook = _hook
   })
 
-  runner.on('test end', () => {
+  const flush = (runnable) => {
     flushStreams()
-    test = null
-  })
+    if (hook === runnable) {
+      hook = null
+    } else if (test === runnable) {
+      test = null
+    }
+  }
 
-  runner.on('hook end', () => {
-    flushStreams()
-    hook = null
-  })
+  for (const event of ['fail', 'pass', 'pending', 'test end', 'hook end']) {
+    runner.prependListener(event, flush)
+  }
 }
