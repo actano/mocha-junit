@@ -6,6 +6,8 @@ import writeTestsuite from './write-testsuite'
 import { xmlDecl } from './write-xml'
 import fullTitle from './full-title'
 
+const trimNewLine = subject => (subject && String(subject.replace(/^[\r\n]+|[\r\n]+$/g, ''))) || ''
+
 export default function writeResults(output, startDate, tests, cb) {
   const name = path.basename(output, path.extname(output))
 
@@ -23,7 +25,13 @@ export default function writeResults(output, startDate, tests, cb) {
     writeTestsuite(writable, name, startDate, tests.length, failures, skipped, () => {
       for (const test of tests) {
         const classname = `${name}.${fullTitle(test.parent)}`
-        writeTest(writable, classname, test, test.failures, test.stdout, test.stderr)
+        const attachments = test.junitAttachments || []
+        let stdout = trimNewLine(test.stdout)
+        if (test.junitAttachments) {
+          if (stdout.length) stdout += '\n'
+          stdout += attachments.map(filename => `[[ATTACHMENT|${filename}]]`).join('\n')
+        }
+        writeTest(writable, classname, test, test.failures, stdout, test.stderr)
       }
     })
     writable.end(cb)

@@ -104,7 +104,7 @@ describe('contract from readme', () => {
       })
 
       it('should contain number of tests run', () => {
-        expect(testsuite.tests).to.eq(String(2))
+        expect(testsuite.tests).to.eq(String(3))
       })
 
       it('should contain number of tests failed', () => {
@@ -122,7 +122,7 @@ describe('contract from readme', () => {
       it('should contain a testcase', () => {
         expect(parsed.testsuite).to.have.property('testcase')
         expect(parsed.testsuite.testcase).to.be.instanceof(Array)
-        expect(parsed.testsuite.testcase[0]).to.have.property('$')
+        expect(_tc(0)).to.have.property('$')
       })
 
       describe('testcase', () => {
@@ -145,17 +145,32 @@ describe('contract from readme', () => {
         })
 
         it('should capture stdout', () => {
-          expect(parsed.testsuite.testcase[0]).to.have.property('system-out')
+          expect(_tc(0)).to.have.property('system-out')
 
           const stdout = getStandardOut()
           expect(stdout).to.contain('stdout')
         })
 
         it('should capture stderr', () => {
-          expect(parsed.testsuite.testcase[0]).to.have.property('system-err')
+          expect(_tc(0)).to.have.property('system-err')
 
           const stderr = getStandardErr()
           expect(stderr).to.contain('stderr')
+        })
+      })
+
+      describe('attachments', () => {
+        it('should contain magic string', () => {
+          const stdout = `\n${getStandardOut(1)}\n`
+          expect(stdout).to.contain('\n[[ATTACHMENT|')
+          expect(stdout).to.contain(']]\n')
+        })
+
+        it('should write absoulte path for attachment', () => {
+          const stdout = `\n${getStandardOut(1)}\n`
+          const match = stdout.match(/\n\[\[ATTACHMENT\|(.*?)]]\n/)
+          const hit = match[1]
+          expect(hit).to.eq(path.join(path.resolve(TEMP_DIR), 'attachment.dat'))
         })
       })
     })

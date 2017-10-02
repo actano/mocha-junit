@@ -2,8 +2,9 @@
 import mochaStreams from './record-streams'
 import recordTestsAndFailures from './record-runnables'
 import writeResults from './write-junit'
+import output from './output'
 
-export default (oldRun, output = 'mocha-junit.xml') => function runWithJunit(fn) {
+export default oldRun => function runWithJunit(fn) {
   mochaStreams(this)
   const tests = recordTestsAndFailures(this)
 
