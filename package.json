@@ -29,6 +29,6 @@
     "mkdirp": "^0.5.1"
   },
   "peerDependencies": {
-    "mocha": "^3"
+    "mocha": "^3 || ^4.0"
   }
 }
