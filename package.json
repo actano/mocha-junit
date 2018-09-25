@@ -22,7 +22,7 @@
     "eslint": "^4.12.1",
     "eslint-config-actano-base": "^2.3.0",
     "eslint-plugin-import": "^2.8.0",
-    "mocha": "^4.0.1",
+    "mocha": "^5.2.0",
     "rimraf": "^2.6.2",
     "xml2js": "^0.4.19"
   },
@@ -30,6 +30,6 @@
     "mkdirp": "^0.5.1"
   },
   "peerDependencies": {
-    "mocha": "^3 || ^4.0"
+    "mocha": "^3 || ^4.0 || ^5"
   }
 }
