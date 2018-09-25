@@ -1,0 +1,17 @@
+language: node_js
+node_js:
+- '8'
+- '10'
+cache: yarn
+script:
+- npm run ci
+deploy:
+  provider: npm
+  skip_cleanup: true
+  email: rplan-ci@actano.de
+  on:
+    tags: true
+    repo: actano/mocha-junit
+    node: '8'
+  api_key:
+    secure: NY2cp8eW6enYXOqi5E9sVj/5KXokl+/f0dtdfbFyUtrlDrv/4hcuSYrrsIhOsw9QcAzYZn1UY8sN0oiQ3Pll6hZoJ/MPjwvX6NXHRj6zWJ0vkGfqji8+umYkL468AD3jYhU0sKuinlRwtAuk4DOcq/Yan0X13dbcVhXr+95VcO4BspNa751Cjx8mrEGw+5yrFIuyTARZ4GIjRZ2vocdow9IGeNDD8dTheLVqjV8n5lrQqVVPoC6+F2/cb37xDfmYFeNKcvZjE6crPENuxAGnSAcJlRNa4eT53y60W0yque0FFO9ZBfeWweAHB1rkkCYNoys1t8SHdSI3Q4Ek/NoeFTDTLzbfLeBxT2m3+oy/FVJqO3TO0FwLwZhG86S7OJq/j3c80iV7wBetxGNPwfc9swr50Jf8oKUE3FF793+k+PRsYVad3ZnsPyPhdWwEZYfyC7oWcGlGsqmuaU/WD004mTRw2x1BHwEz5qqTezPwuq4dKCB+KVz1APjjK8bHmFQwowbukHVNvLNiVS2/umSb2WVZjvlqr300M5bWNy/yvj0+Wyt5zAFqN0qGxMj0WRiMclUgUy3+8x+I9s94Lzfpa2WqUOpb4gXR8IeT6GO2Rij6GNzSKh8ZNStrj6HmYo3nIj+ne747GtELcqdqY4g1J3cTvLzQmXx7XmPRBGKqhus=
