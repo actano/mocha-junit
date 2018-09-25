@@ -11,7 +11,7 @@
     "test": "mocha",
     "build": "babel src --out-dir lib",
     "lint": "eslint src test",
-    "prepublish": "rm -rf lib && babel src --out-dir lib",
+    "prepublishOnly": "rm -rf lib && npm run build",
     "ci": "npm run lint && npm run test"
   },
   "devDependencies": {
